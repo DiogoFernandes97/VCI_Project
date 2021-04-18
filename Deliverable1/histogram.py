@@ -8,11 +8,12 @@ img_equalized = cv.equalizeHist(img)
 hist = cv.calcHist([img],[0],None,[256],[0,256])
 hist_equalized = cv.calcHist([img_equalized],[0],None,[256],[0,256])
 
-plt.subplot(121), plt.title('Histogram'), plt.plot(hist)
-plt.subplot(122), plt.title('Equalized Histogram'), plt.plot(hist_equalized)
-
-res = np.hstack((img,img_equalized)) #stacking images side-by-side
-cv.imshow('Result',res)
+plt.subplot(221), plt.title('Original Image'), plt.imshow(img, cmap='gray', vmin=0, vmax=255)
+plt.xticks([]), plt.yticks([])
+plt.subplot(222), plt.title('Equalized Image'), plt.imshow(img_equalized, cmap='gray', vmin=0, vmax=255)
+plt.xticks([]), plt.yticks([])
+plt.subplot(223), plt.title('Histogram'), plt.plot(hist)
+plt.subplot(224), plt.title('Equalized Histogram'), plt.plot(hist_equalized)
 plt.show()
 
 cv.waitKey(0)
