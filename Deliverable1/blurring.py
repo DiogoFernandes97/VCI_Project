@@ -2,41 +2,34 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv.imread('opencv_logo.png')
+img = cv.imread('parrots.jpg')
 
 # Averaging
 blur = cv.blur(img,(5,5))
- 
-plt.subplot(121),plt.imshow(img),plt.title('Original')
-plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(blur),plt.title('Blurred')
-plt.xticks([]), plt.yticks([])
-plt.show()
 
+image1 = np.hstack((img, blur))
+cv.imshow('Averaging', image1)
+cv.waitKey(0)
 
 # Gaussian Blurring
 gaussian_blur = cv.GaussianBlur(img,(5,5),0)
 
-plt.subplot(121),plt.imshow(img),plt.title('Original')
-plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(gaussian_blur),plt.title('Gaussian Blurring')
-plt.xticks([]), plt.yticks([])
-plt.show()
+image2 = np.hstack((img, gaussian_blur))
+cv.imshow('Gaussian Blurring', image2)
+cv.waitKey(0)
 
 # Median Blurring
 median = cv.medianBlur(img,5)
 
-plt.subplot(121),plt.imshow(img),plt.title('Original')
-plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(median),plt.title('Median Blurring')
-plt.xticks([]), plt.yticks([])
-plt.show()
+image3 = np.hstack((img, median))
+cv.imshow('Median Blurring', image3)
+cv.waitKey(0)
 
 # Bilateral Filtering
 bilateral_blur = cv.bilateralFilter(img,9,75,75)
 
-plt.subplot(121),plt.imshow(img),plt.title('Original')
-plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(bilateral_blur),plt.title('Bilateral Filtering')
-plt.xticks([]), plt.yticks([])
-plt.show()
+image4 = np.hstack((img, bilateral_blur))
+cv.imshow('Bilateral Blurring', image4)
+cv.waitKey(0)
+
+cv.destroyAllWindows()
