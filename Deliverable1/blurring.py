@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv.imread('lena.jpg')
+img = cv.imread('quack.jpg')
 height, width = img.shape[:2]
 
 #Image Zoom and crop
