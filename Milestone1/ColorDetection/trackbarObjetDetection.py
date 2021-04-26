@@ -13,10 +13,35 @@ cv.createTrackbar("U_H", "Track_Detection", 179, 179, nothing)
 cv.createTrackbar("U_S", "Track_Detection", 255, 255, nothing)
 cv.createTrackbar("U_V", "Track_Detection", 255, 255, nothing)
 
-image = cv.resize(cv.imread("lego.jpg"),(360,360))
+bgr = cv.resize(cv.imread("lego-rot45-5b_greened.jpg"), (360,480))
+
+
+lab = cv.cvtColor(bgr, cv.COLOR_BGR2LAB)
+
+lab_planes = cv.split(lab)
+
+clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+
+#lab_planes[0] = cv.equalizeHist(lab_planes[0])
+
+lab_planes[0] = clahe.apply(lab_planes[0])
+
+lab = cv.merge(lab_planes)
+
+image = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
+
+
+wb = cv.xphoto.createGrayworldWB()
+wb.setSaturationThreshold(0.99)
+image = wb.balanceWhite(image)
+
 
 while 1:
     hsv_image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+
+    hsv_image[:, :, 2] = cv.equalizeHist(hsv_image[:, :, 2])
+    
+
     # get current positions of trackbars
     l_h = cv.getTrackbarPos("L_H", "Track_Detection")
     l_s = cv.getTrackbarPos("L_S", "Track_Detection")
