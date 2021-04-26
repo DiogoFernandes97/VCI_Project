@@ -5,12 +5,25 @@ def nothing(x):
     pass
 
 # Load image
-img = cv2.imread('dataset/01/lego-rot0-1a.jpg')
-# -- >Shape
-print(f'Image shape: ', img.shape)  # Shape of image
-rows, cols, channels = img.shape
+img1 = cv2.imread('dataset/01/lego-rot0-1a.jpg')
+img2 = cv2.imread('dataset/01/lego-rot0-1c.jpg')
+img3 = cv2.imread('dataset/01/lego-rot0-2a.jpg')
+img4 = cv2.imread('dataset/01/lego-rot0-3c.jpg')
 # Resize to fit screen (lose definition, only for visual while coding)
-image = cv2.resize(img, (round(cols / 7), round(rows / 7)))
+image1 = cv2.resize(img1, (300, 300))
+image2 = cv2.resize(img2, (300, 300))
+image3 = cv2.resize(img3, (300, 300))
+image4 = cv2.resize(img4, (300, 300))
+
+numpy_vertical = np.vstack((image1, image2))
+numpy_vertical2 = np.vstack((image3, image4))
+numpy_horizontal = np.hstack((numpy_vertical, numpy_vertical2))
+image1 = np.concatenate((numpy_vertical, numpy_vertical2), axis=1)
+
+#image = np.concatenate((image1, image2), axis=0)
+#image = np.concatenate((image, image3), axis=1)
+#image = np.concatenate((image, ))
+
 
 # Create a window
 cv2.namedWindow('image')
@@ -47,9 +60,9 @@ while(1):
     upper = np.array([hMax, sMax, vMax])
 
     # Convert to HSV format and color threshold
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(image1, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower, upper)
-    result = cv2.bitwise_and(image, image, mask=mask)
+    result = cv2.bitwise_and(image1, image1, mask=mask)
 
     # Print if there is a change in HSV value
     if((phMin != hMin) | (psMin != sMin) | (pvMin != vMin) | (phMax != hMax) | (psMax != sMax) | (pvMax != vMax) ):
