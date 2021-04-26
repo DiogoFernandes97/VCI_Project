@@ -5,7 +5,7 @@ def nothing(x):
     pass
 
 # Load image
-img = cv2.imread('legos.jpg')
+img = cv2.imread('dataset/01/lego-rot0-1a.jpg')
 # -- >Shape
 print(f'Image shape: ', img.shape)  # Shape of image
 rows, cols, channels = img.shape
