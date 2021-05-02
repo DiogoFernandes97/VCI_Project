@@ -25,10 +25,16 @@ cv.createTrackbar("U_H", "Track_Detection", 179, 179, nothing)
 cv.createTrackbar("U_S", "Track_Detection", 255, 255, nothing)
 cv.createTrackbar("U_V", "Track_Detection", 255, 255, nothing)
 
-image = cv.imread('lego_2.jpg')
+image1 = cv.imread('lego_1.jpg')
+image2 = cv.imread('lego_2.jpg')
+image3 = cv.imread('lego_3.jpg')
+
+image1 = np.concatenate((image1, image2), axis=1)
+image1 = np.concatenate((image1, image3), axis=1)
+image1 = cv.resize(image1, (1080, 480))
 
 while True:
-    hsv_image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    hsv_image = cv.cvtColor(image1, cv.COLOR_BGR2HSV)
 
     # get current positions of trackbars
     l_h = cv.getTrackbarPos("L_H", "Track_Detection")
@@ -44,17 +50,15 @@ while True:
     upper_values = np.array([u_h, u_s, u_v])
     
     # generate Mask
-    mask = cv.inRange(hsv_image, lower_values, upper_values)
-    # Result image
-    result = cv.bitwise_and(image, image, mask=mask)
+    mask_r1 = cv.inRange(hsv_image, lower_values, upper_values)
+    # Result image1
+    result_r1 = cv.bitwise_and(image1, image1, mask=mask_r1)
 
-    image_r = cv.resize(image, (360,480))
-    mask_r = cv.resize(mask, (360,480))
-    result_r = cv.resize(result, (360,480))
 
-    cv.imshow("Original Image", image_r)
-    cv.imshow("Mask", mask_r)
-    cv.imshow("Result", result_r)
+
+    cv.imshow("Original Image", image1)
+    cv.imshow("Mask", mask_r1)
+    cv.imshow("Result", result_r1)
 
     k = cv.waitKey(1) & 0xFF
 
