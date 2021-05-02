@@ -5,39 +5,17 @@ from matplotlib import pyplot as plt
 
 def nothing(x):
     pass
-'''
-def balance_white(img):
-    wb = cv.xphoto.createGrayworldWB()
-    wb.setSaturationThreshold(0.99)
-    bal_image = wb.balanceWhite(img)
-    return bal_image
-'''
-def check_File(fileName):
-    if not fl.isfile(fileName):
-        print ("File not exist")
-        f = open(fileName, "w")
-    else:
-        print ("File exist")
-        f = open(fileName, "a")
-    return f
 
-def saveData(low_values, upper_values):
+def saveData(fileName, low_values, upper_values):
+    f = open(fileName, "a")
     rangeColor = str(input("Nome da gama a inserir: "))
-    f.write(rangeColor+": ")
+    f.write(rangeColor)
+    f.write(":\n")
     f.write(np.array2string(lower_values))
-    f.write(" - ")
+    f.write("\n")
     f.write(np.array2string(upper_values))
-    '''
-    low_values = "[" + str(l_h) + "," + str(l_s) + "," + str(l_v) + "]"
-    up_values = "[" + str(u_h) + "," + str(u_s) + "," + str(u_v) + "]"
-    
-    f.write(low_values)
-    f.write("-")
-    f.write(up_values)
-    '''
     f.write("\n")
     f.close()
-
 
 cv.namedWindow("Track_Detection")
 cv.createTrackbar("L_H", "Track_Detection", 0, 179, nothing)
@@ -48,7 +26,6 @@ cv.createTrackbar("U_S", "Track_Detection", 255, 255, nothing)
 cv.createTrackbar("U_V", "Track_Detection", 255, 255, nothing)
 
 image = cv.imread('lego_2.jpg')
-#img_balanced = balance_white(image)
 
 while True:
     hsv_image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
@@ -72,12 +49,10 @@ while True:
     result = cv.bitwise_and(image, image, mask=mask)
 
     image_r = cv.resize(image, (360,480))
-    #img_balanced_r = cv.resize(img_balanced, (360,480))
     mask_r = cv.resize(mask, (360,480))
     result_r = cv.resize(result, (360,480))
 
     cv.imshow("Original Image", image_r)
-    #cv.imshow("Balanced White Image", img_balanced_r)
     cv.imshow("Mask", mask_r)
     cv.imshow("Result", result_r)
 
@@ -89,10 +64,7 @@ while True:
         break  
 
     if k == ord('s'):
-        fileName = str(input("Name of File: "))
-        fileName = str(fileName+".txt")
-        f = check_File(fileName)
-        
-        saveData(lower_values, upper_values)
+        fileName = str("Ranges_File.txt")
+        saveData(fileName, lower_values, upper_values)
     
 cv.destroyAllWindows()
