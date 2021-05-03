@@ -15,7 +15,6 @@ cv.createTrackbar("U_V", "Track_Detection", 255, 255, nothing)
 
 bgr = cv.resize(cv.imread("lego-rot45-5b_greened.jpg"), (360,480))
 
-
 lab = cv.cvtColor(bgr, cv.COLOR_BGR2LAB)
 
 lab_planes = cv.split(lab)
@@ -29,12 +28,6 @@ lab_planes[0] = clahe.apply(lab_planes[0])
 lab = cv.merge(lab_planes)
 
 image = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
-
-
-wb = cv.xphoto.createGrayworldWB()
-wb.setSaturationThreshold(0.99)
-image = wb.balanceWhite(image)
-
 
 while 1:
     hsv_image = cv.cvtColor(image, cv.COLOR_BGR2HSV)

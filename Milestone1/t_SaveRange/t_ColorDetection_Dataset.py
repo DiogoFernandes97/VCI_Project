@@ -54,8 +54,6 @@ while True:
     # Result image1
     result_r1 = cv.bitwise_and(image1, image1, mask=mask_r1)
 
-
-
     cv.imshow("Original Image", image1)
     cv.imshow("Mask", mask_r1)
     cv.imshow("Result", result_r1)
