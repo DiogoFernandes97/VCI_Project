@@ -17,6 +17,12 @@ def saveData(fileName, low_values, upper_values):
     f.write("\n")
     f.close()
 
+def balance_white(img):
+    wb = cv.xphoto.createGrayworldWB()
+    wb.setSaturationThreshold(0.99)
+    bal_image = wb.balanceWhite(img)
+    return bal_image
+
 cv.namedWindow("Track_Detection")
 cv.createTrackbar("L_H", "Track_Detection", 0, 179, nothing)
 cv.createTrackbar("L_S", "Track_Detection", 0, 255, nothing)
@@ -29,9 +35,11 @@ image1 = cv.imread('lego_1.jpg')
 image2 = cv.imread('lego_2.jpg')
 image3 = cv.imread('lego_3.jpg')
 
-image1 = np.concatenate((image1, image2), axis=1)
-image1 = np.concatenate((image1, image3), axis=1)
-image1 = cv.resize(image1, (1080, 480))
+image = balance_white(image3)
+
+kernel = np.ones((5,5),np.uint8)
+
+image1 = cv.resize(image, (360, 480))
 
 while True:
     hsv_image = cv.cvtColor(image1, cv.COLOR_BGR2HSV)
@@ -51,6 +59,10 @@ while True:
     
     # generate Mask
     mask_r1 = cv.inRange(hsv_image, lower_values, upper_values)
+
+    # morphological operation
+    #mask_r1 = cv.morphologyEx(mask_r1,cv.MORPH_CLOSE, kernel)
+
     # Result image1
     result_r1 = cv.bitwise_and(image1, image1, mask=mask_r1)
 
