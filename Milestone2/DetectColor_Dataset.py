@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 import os.path as fl
 from matplotlib import pyplot as plt
-
+from numpy.lib.type_check import imag
 
 def balance_white(img):
     wb = cv.xphoto.createGrayworldWB()
@@ -10,6 +10,11 @@ def balance_white(img):
     bal_image = wb.balanceWhite(img)
     return bal_image
 
+# variable initialization
+name = []
+unit_size = 162.0
+
+#c_area = []
 
 f = open("Ranges_File.txt", "r")
 nonempty_lines = [line.strip("\n") for line in f if line != "\n"]
@@ -19,14 +24,9 @@ f.close()
 if line_count % 3 != 0:  # para garantir que temos todos os valores necessarios
     exit()
 
-print(line_count)
-
 num_range = line_count // 3
 print(num_range)
-# name = np.zeros(num_range, dtype=str_)
-name = []
-c_area = []
-color_mean = []
+
 lower_value = np.zeros([num_range, 3])
 upper_value = np.zeros([num_range, 3])
 
@@ -35,7 +35,7 @@ f = open("Ranges_File.txt", "r")
 image = cv.imread('lego_3.jpg')
 image_b = cv.blur(image, (50, 50))
 image_b = cv.Canny(image_b, 10, 50)  # apply canny to roi
-mask = np.zeros(image.shape[:2], np.uint8)
+mask = np.zeros(image_b.shape[:2], np.uint8)
 
 # kernel for morphological
 kernel = np.ones((5, 5), np.uint8)
@@ -47,7 +47,6 @@ hsv_image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
 
 for i in range(0, num_range):
     name.append(f.readline().rstrip(":\n"))
-    # print(name[i])
 
     x = ((f.readline().lstrip("[")).rstrip("]\n")).split()
     lower_value[i, 0] = x[0]
@@ -61,8 +60,6 @@ for i in range(0, num_range):
 
     mask_t = cv.inRange(hsv_image, lower_value[i, :], upper_value[i, :])
 
-    color_mean.append((cv.mean(image, mask=mask_t)[:3]))
-
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_OPEN, kernel, iterations=2)
     mask_t = cv.dilate(mask_t, kernel, iterations=2)
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_CLOSE, kernel, iterations=10)
@@ -75,30 +72,40 @@ for i in range(0, num_range):
     # generate Mask
     mask = mask | mask_t
 
-
-
-
 # Result image
 result = cv.bitwise_and(image, image, mask=mask)
 
-#
-color_mean = np.array(color_mean)
-color_mean = color_mean.astype(int)
+contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)   # tentar cv.RETR_EXTERNAL
+coordinates = np.zeros([len(contours), 3])
 
-contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+i=0
 for c in contours:
+    
     # compute the center of the contour
     M = cv.moments(c)
     cX = int(M["m10"] / M["m00"])
     cY = int(M["m01"] / M["m00"])
-    # draw the contour and center of the shape on the image
-    cv.drawContours(result, [c], -1, (0, 0, 255), 8)
-    cv.circle(result, (cX, cY), 20, (255, 100, 100), -1)
-    c_area.append(int(cv.contourArea(c)))
-    cv.putText(result, str(int(cv.contourArea(c))), (cX - 200, cY - 20),
-        cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    print('Pos_x:',cX,' Pos_y:',cY)
+  
+    coordinates[i,0]=cX # coordenada x
+    coordinates[i,1]=cY # coordenada y
 
-c_area = np.array(c_area)
+    # draw the contour and center of the pieces on the image
+    #cv.drawContours(result, [c], -1, (0, 0, 255), 8)
+    cv.circle(result, (cX, cY), 20, (255, 100, 100), -1) 
+
+    # Identify the minimun area of the lego piece
+    rect = cv.minAreaRect(c)
+    box = cv.boxPoints(rect)
+    box = np.int0(box)
+    result = cv.drawContours(result,[box],0,(0,255,0),10)
+    ((x, y), (width, height), angle)=cv.minAreaRect(c)
+
+    print('width:', round(width/unit_size), '   ', 'height', round(height/unit_size))
+    cv.putText(result, str(i)+" "+ str(int(round(width/162,0)))+"x"+str(int(round(height/162,0))  ), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    
+    i=i+1
+
 
 image_r = cv.resize(image, (360, 480))
 mask_r = cv.resize(mask, (360, 480))
@@ -108,10 +115,14 @@ result_r = cv.resize(result, (360, 480))
 cv.imshow("Original Image", image_r)
 cv.imshow("Mask", mask_r)
 cv.imshow("Result", result_r)
-print(c_area)
-print(color_mean)
 
 cv.waitKey(0) & 0xFF == 27
 
 f.close()
 cv.destroyAllWindows()
+
+
+# To do
+#   - tamanho em cm;
+#   - area
+#   - perimetro
