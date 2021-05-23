@@ -10,11 +10,11 @@ def balance_white(img):
     bal_image = wb.balanceWhite(img)
     return bal_image
 
+
 # variable initialization
 name = []
 unit_size = 162.0
-
-#c_area = []
+color_mean = []
 
 f = open("Ranges_File.txt", "r")
 nonempty_lines = [line.strip("\n") for line in f if line != "\n"]
@@ -60,11 +60,12 @@ for i in range(0, num_range):
 
     mask_t = cv.inRange(hsv_image, lower_value[i, :], upper_value[i, :])
 
+    color_mean.append((cv.mean(image, mask=mask_t)[:3]))
+
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_OPEN, kernel, iterations=2)
     mask_t = cv.dilate(mask_t, kernel, iterations=2)
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_CLOSE, kernel, iterations=10)
     mask_t = cv.erode(mask_t, kernel, iterations=1)
-    mask_t = cv.morphologyEx(mask_t, cv.MORPH_CLOSE, kernel, iterations=1)
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_OPEN, kernel, iterations=6)
     mask_t = cv.dilate(mask_t, kernel, iterations=10)
     mask_t = cv.erode(mask_t, kernel, iterations=8)
@@ -75,31 +76,36 @@ for i in range(0, num_range):
 # Result image
 result = cv.bitwise_and(image, image, mask=mask)
 
+#
+color_mean = np.array(color_mean)
+color_mean = color_mean.astype(int)
+# print("Piece color:", color_mean)
+
 contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)   # tentar cv.RETR_EXTERNAL
 coordinates = np.zeros([len(contours), 3])
 
-i=0
+i = 0
 for c in contours:
     
     # compute the center of the contour
     M = cv.moments(c)
     cX = int(M["m10"] / M["m00"])
     cY = int(M["m01"] / M["m00"])
-    #print('Pos_x:',cX,' Pos_y:',cY)
+    # print('Pos_x:',cX,' Pos_y:',cY)
   
-    coordinates[i,0]=cX # coordenada x
-    coordinates[i,1]=cY # coordenada y
+    coordinates[i, 0] = cX  # coordenada x
+    coordinates[i, 1] = cY  # coordenada y
 
     # draw the contour and center of the pieces on the image
-    #cv.drawContours(result, [c], -1, (0, 0, 255), 8)
+    # cv.drawContours(result, [c], -1, (0, 0, 255), 8)
     cv.circle(result, (cX, cY), 20, (255, 100, 100), -1) 
 
     # Identify the minimun area of the lego piece
     rect = cv.minAreaRect(c)
     box = cv.boxPoints(rect)
     box = np.int0(box)
-    result = cv.drawContours(result,[box],0,(0,255,0),10)
-    ((x, y), (width, height), angle)=cv.minAreaRect(c)
+    result = cv.drawContours(result, [box], 0, (0, 255, 0), 10)
+    ((x, y), (width, height), angle) = cv.minAreaRect(c)
 
     '''
     # Size of pieces in cm
@@ -118,25 +124,26 @@ for c in contours:
     h = (h_mm + 0.2)/8
 
     # area
-    #area_1 = w_mm*h_mm
+    # area_1 = w_mm*h_mm
     area = cv.contourArea(box)
     # perimeter
-    #perimeter_1 = 2*w_mm + 2*h_mm
+    # perimeter_1 = 2*w_mm + 2*h_mm
     perimeter = cv.arcLength(box,True)
 
-    print('Piece',i,':')
+    print('Piece', i+1, ':')
     print('width(px):', round(width), '   ', 'height(px):', round(height))
-    #print('width(cm):', dec(w_cm),1, '   ', 'height(cm):', dec(h_cm),1)    
-    #print('width:', round(width/unit_size), '   ', 'height:', round(height/unit_size))
-    print('width(mm):', round(w_mm,1), '   ', 'height(mm):', round(h_mm))
+    # print('width(cm):', dec(w_cm),1, '   ', 'height(cm):', dec(h_cm),1)
+    # print('width:', round(width/unit_size), '   ', 'height:', round(height/unit_size))
+    print('width(mm):', round(w_mm, 1), '   ', 'height(mm):', round(h_mm))
     print('width(blocks):', round(w), '   ', 'height(blocks):', round(h))
-    #print('Area(px):',round(area_1))
-    print('Area(mm^2):',round(area*math.pow(0.04822,2)))
-    #print('Perimeter_1:',round(perimeter_1))
-    print('Perimeter(mm):',round(perimeter*0.04822))
-    cv.putText(result, str(i)+" "+ str(int(round(width/162,0)))+"x"+str(int(round(height/162,0))  ), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    # print('Area(px):',round(area_1))
+    print('Area(mm^2):', round(area*math.pow(0.04822, 2)))
+    # print('Perimeter_1:',round(perimeter_1))
+    print('Perimeter(mm):', round(perimeter*0.04822))
+    cv.putText(result, str(i+1)+" "+str(int(round(width/162, 0)))+"x"+str(int(round(height/162, 0))), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    # print("Piece color:", color_mean[i][:3])
     print('\n')
-    i=i+1
+    i = i+1
 
 
 image_r = cv.resize(image, (360, 480))
