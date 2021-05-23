@@ -13,8 +13,9 @@ def balance_white(img):
 
 # variable initialization
 name = []
-unit_size = 162.0
-color_mean = []
+mm_px = 0.04822
+
+#c_area = []
 
 f = open("Ranges_File.txt", "r")
 nonempty_lines = [line.strip("\n") for line in f if line != "\n"]
@@ -25,7 +26,7 @@ if line_count % 3 != 0:  # para garantir que temos todos os valores necessarios
     exit()
 
 num_range = line_count // 3
-print(num_range)
+#print(num_range)
 
 lower_value = np.zeros([num_range, 3])
 upper_value = np.zeros([num_range, 3])
@@ -36,6 +37,7 @@ image = cv.imread('lego_3.jpg')
 image_b = cv.blur(image, (50, 50))
 image_b = cv.Canny(image_b, 10, 50)  # apply canny to roi
 mask = np.zeros(image_b.shape[:2], np.uint8)
+lego_mask = np.zeros(image_b.shape[:2], np.uint8)
 
 # kernel for morphological
 kernel = np.ones((5, 5), np.uint8)
@@ -60,7 +62,7 @@ for i in range(0, num_range):
 
     mask_t = cv.inRange(hsv_image, lower_value[i, :], upper_value[i, :])
 
-    color_mean.append((cv.mean(image, mask=mask_t)[:3]))
+    #color_mean.append((cv.mean(image, mask=mask_t)[:3]))
 
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_OPEN, kernel, iterations=2)
     mask_t = cv.dilate(mask_t, kernel, iterations=2)
@@ -76,10 +78,7 @@ for i in range(0, num_range):
 # Result image
 result = cv.bitwise_and(image, image, mask=mask)
 
-#
-color_mean = np.array(color_mean)
-color_mean = color_mean.astype(int)
-# print("Piece color:", color_mean)
+
 
 contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)   # tentar cv.RETR_EXTERNAL
 coordinates = np.zeros([len(contours), 3])
@@ -97,8 +96,8 @@ for c in contours:
     coordinates[i, 1] = cY  # coordenada y
 
     # draw the contour and center of the pieces on the image
-    # cv.drawContours(result, [c], -1, (0, 0, 255), 8)
-    cv.circle(result, (cX, cY), 20, (255, 100, 100), -1) 
+    #cv.drawContours(result, [c], -1, (0, 0, 255), 8)
+    #cv.circle(result, (cX, cY), 20, (255, 100, 100), -1) 
 
     # Identify the minimun area of the lego piece
     rect = cv.minAreaRect(c)
@@ -116,12 +115,18 @@ for c in contours:
     h_cm_1 = str(height*0.048823/10)
     '''
     # calculo das dimensoes em mm
-    w_mm = (width *0.04822)
-    h_mm = (height*0.04822)
+    w_mm = (width *mm_px)
+    h_mm = (height*mm_px)
 
     # converte para nº blocos
-    w = (w_mm + 0.2)/8
-    h = (h_mm + 0.2)/8
+    w = round((w_mm + 0.2)/8)
+    h = round((h_mm + 0.2)/8)
+
+    #Ensuring even sizes
+    if w > 3:
+        w = round(w/2)*2
+    if h > 3:
+        h = round(h/2)*2
 
     # area
     # area_1 = w_mm*h_mm
@@ -130,20 +135,39 @@ for c in contours:
     # perimeter_1 = 2*w_mm + 2*h_mm
     perimeter = cv.arcLength(box,True)
 
-    print('Piece', i+1, ':')
-    print('width(px):', round(width), '   ', 'height(px):', round(height))
-    # print('width(cm):', dec(w_cm),1, '   ', 'height(cm):', dec(h_cm),1)
-    # print('width:', round(width/unit_size), '   ', 'height:', round(height/unit_size))
-    print('width(mm):', round(w_mm, 1), '   ', 'height(mm):', round(h_mm))
-    print('width(blocks):', round(w), '   ', 'height(blocks):', round(h))
-    # print('Area(px):',round(area_1))
-    print('Area(mm^2):', round(area*math.pow(0.04822, 2)))
-    # print('Perimeter_1:',round(perimeter_1))
-    print('Perimeter(mm):', round(perimeter*0.04822))
-    cv.putText(result, str(i+1)+" "+str(int(round(width/162, 0)))+"x"+str(int(round(height/162, 0))), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
-    # print("Piece color:", color_mean[i][:3])
+
+    lego_mask = np.zeros(image.shape[:2], np.uint8)
+    cv.drawContours(lego_mask,[box],-1,(255),-1)
+    
+    mean_val = cv.mean(hsv_image,mask = lego_mask)
+    #print(mean_val[0:3])
+  
+    color_index = 0
+    for k in range(0, num_range):
+       if np.all(cv.inRange(mean_val[0:3], lower_value[k,:],upper_value[k,:]) == 255 ):
+           #print("Found Colour " + name[k])
+           color_index = k
+           break
+
+
+
+
+    print('Piece',i,':')
+    print("Colour: " + name[color_index] )
+    print('width(px):', round(width,1), '   ', 'height(px):', round(height,1))
+    #print('width(cm):', dec(w_cm),1, '   ', 'height(cm):', dec(h_cm),1)    
+    #print('width:', round(width/unit_size), '   ', 'height:', round(height/unit_size))
+    print('width(mm):', round(w_mm,1), '   ', 'height(mm):', round(h_mm))
+    print('width(blocks):', w, '   ', 'height(blocks):',h)
+    #print('Area(px):',round(area_1))
+    print('Area(mm^2):',round(area*math.pow(mm_px,2)))
+    #print('Perimeter_1:',round(perimeter_1))S
+    print('Perimeter(mm):',round(perimeter*mm_px))
+    cv.putText(result, str(i)+" "+ str(w)+"x"+str(h) , (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    cv.putText(result, name[color_index] , (cX -150, cY + 100), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
     print('\n')
-    i = i+1
+
+    i=i+1
 
 
 image_r = cv.resize(image, (360, 480))
@@ -155,11 +179,7 @@ cv.imshow("Original Image", image_r)
 cv.imshow("Mask", mask_r)
 cv.imshow("Result", result_r)
 
-cv.waitKey(0) & 0xFF == 27
+cv.waitKey(0) 
 
 f.close()
 cv.destroyAllWindows()
-
-
-# To do
-#   - identificação da cor das peças
