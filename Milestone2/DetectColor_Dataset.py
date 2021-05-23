@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
-import os.path as fl
 from matplotlib import pyplot as plt
-from numpy.lib.type_check import imag
+from decimal import Decimal as dec
+import math
 
 def balance_white(img):
     wb = cv.xphoto.createGrayworldWB()
@@ -64,6 +64,7 @@ for i in range(0, num_range):
     mask_t = cv.dilate(mask_t, kernel, iterations=2)
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_CLOSE, kernel, iterations=10)
     mask_t = cv.erode(mask_t, kernel, iterations=1)
+    mask_t = cv.morphologyEx(mask_t, cv.MORPH_CLOSE, kernel, iterations=1)
     mask_t = cv.morphologyEx(mask_t, cv.MORPH_OPEN, kernel, iterations=6)
     mask_t = cv.dilate(mask_t, kernel, iterations=10)
     mask_t = cv.erode(mask_t, kernel, iterations=8)
@@ -77,22 +78,21 @@ result = cv.bitwise_and(image, image, mask=mask)
 contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)   # tentar cv.RETR_EXTERNAL
 coordinates = np.zeros([len(contours), 3])
 
-i = 0
+i=0
 for c in contours:
     
     # compute the center of the contour
     M = cv.moments(c)
     cX = int(M["m10"] / M["m00"])
     cY = int(M["m01"] / M["m00"])
-    print('Piece:', i+1)
-    print('Pos_x:', cX, ' Pos_y:', cY)
+    #print('Pos_x:',cX,' Pos_y:',cY)
   
-    coordinates[i, 0] = cX  # coordenada x
-    coordinates[i, 1] = cY  # coordenada y
+    coordinates[i,0]=cX # coordenada x
+    coordinates[i,1]=cY # coordenada y
 
     # draw the contour and center of the pieces on the image
-    # cv.drawContours(result, [c], -1, (0, 0, 255), 8)
-    cv.circle(result, (cX, cY), 20, (255, 100, 100), -1)
+    #cv.drawContours(result, [c], -1, (0, 0, 255), 8)
+    cv.circle(result, (cX, cY), 20, (255, 100, 100), -1) 
 
     # Identify the minimun area of the lego piece
     rect = cv.minAreaRect(c)
@@ -101,10 +101,42 @@ for c in contours:
     result = cv.drawContours(result,[box],0,(0,255,0),10)
     ((x, y), (width, height), angle)=cv.minAreaRect(c)
 
-    print('width:', round(width/unit_size), '   ', 'height', round(height/unit_size))
-    cv.putText(result, str(i+1)+" "+str(int(round(width/162, 0)))+"x"+str(int(round(height/162, 0))), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
+    '''
+    # Size of pieces in cm
+    w_cm = str(round(width/unit_size)*0.8)
+    h_cm = str(round(height/unit_size)*0.8)
+
+    w_cm_1 = str(width*0.048823/10)
+    h_cm_1 = str(height*0.048823/10)
+    '''
+    # calculo das dimensoes em mm
+    w_mm = (width *0.04822)
+    h_mm = (height*0.04822)
+
+    # converte para nº blocos
+    w = (w_mm + 0.2)/8
+    h = (h_mm + 0.2)/8
+
+    # area
+    #area_1 = w_mm*h_mm
+    area = cv.contourArea(box)
+    # perimeter
+    #perimeter_1 = 2*w_mm + 2*h_mm
+    perimeter = cv.arcLength(box,True)
+
+    print('Piece',i,':')
+    print('width(px):', round(width), '   ', 'height(px):', round(height))
+    #print('width(cm):', dec(w_cm),1, '   ', 'height(cm):', dec(h_cm),1)    
+    #print('width:', round(width/unit_size), '   ', 'height:', round(height/unit_size))
+    print('width(mm):', round(w_mm,1), '   ', 'height(mm):', round(h_mm))
+    print('width(blocks):', round(w), '   ', 'height(blocks):', round(h))
+    #print('Area(px):',round(area_1))
+    print('Area(mm^2):',round(area*math.pow(0.04822,2)))
+    #print('Perimeter_1:',round(perimeter_1))
+    print('Perimeter(mm):',round(perimeter*0.04822))
+    cv.putText(result, str(i)+" "+ str(int(round(width/162,0)))+"x"+str(int(round(height/162,0))  ), (cX - 200, cY - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10)
     print('\n')
-    i = i+1
+    i=i+1
 
 
 image_r = cv.resize(image, (360, 480))
@@ -123,6 +155,4 @@ cv.destroyAllWindows()
 
 
 # To do
-#   - tamanho em cm;
-#   - area
-#   - perimetro
+#   - identificação da cor das peças
