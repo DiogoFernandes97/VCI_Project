@@ -4,6 +4,9 @@ import os.path as fl
 from matplotlib import pyplot as plt
 import imutils
 from collections import deque
+from numpy.core.fromnumeric import reshape, resize, var
+
+from numpy.core.numeric import rollaxis
 
 
 def balance_white(img):
@@ -16,9 +19,6 @@ def balance_white(img):
 # Open the video
 cap = cv.VideoCapture('Final.mp4')
 
-
-
-
 mm_px = 0.27
 # Initialize frame counter
 cnt = 0
@@ -28,7 +28,7 @@ w_frame, h_frame = int(cap.get(cv.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv.CAP_PRO
 fps, frames = cap.get(cv.CAP_PROP_FPS), cap.get(cv.CAP_PROP_FRAME_COUNT)
 
 
-f = open("Ranges_File.txt", "r")
+f = open("Ranges_File_5.txt", "r")
 nonempty_lines = [line.strip("\n") for line in f if line != "\n"]
 line_count = len(nonempty_lines)
 f.close()
@@ -45,7 +45,7 @@ upper_value = np.zeros([num_range, 3])
 # kernel for morphological
 kernel = np.ones((5, 5), np.uint8)
 
-f = open("Ranges_File.txt", "r")
+f = open("Ranges_File_5.txt", "r")
 name = []
 for i in range(0, num_range):
     name.append(f.readline().rstrip(":\n"))
@@ -61,25 +61,28 @@ for i in range(0, num_range):
     upper_value[i, 2] = x[2]
 f.close()
 
+x1=-1
 # loop over the frames of the video
 while cap.isOpened():
 
     ret, frame = cap.read()
 
-
     cnt += 1  # Counting frames
 
     if ret:
         # Percentage
-        xx = cnt * 100 / frames
-        print(int(xx), '%')
+        xx = int(cnt * 100 / frames)
+        if (xx != x1) and (xx%10 == 0):
+            x1=xx
+            print('Procesing...     ',xx, '%')
 
         result = frame.copy()
         result = cv.resize(result, (round(w_frame/3), round(h_frame/3)))
         frame2 = frame.copy()
         frame2 = cv.resize(frame2, (round(w_frame/3), round(h_frame/3)))
         frame2 = balance_white(frame2)
-        print('Frame:', cnt)
+
+        #print('Frame:', cnt)
         '''if cnt == 600:
             cv.imwrite('adjf1.jpg', frame2)''' # get a frame for range calibration
         mask = np.zeros(frame2.shape[:2], np.uint8)
@@ -174,9 +177,6 @@ while cap.isOpened():
         # Show
         cv.imshow('Mask', mask)
         cv.imshow('frame2', frame2)
-
-        f.close()
-
         cv.imshow('Show', result)
 
         # Press Q on keyboard to  exit

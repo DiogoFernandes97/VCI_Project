@@ -31,13 +31,16 @@ cv.createTrackbar("U_H", "Track_Detection", 179, 179, nothing)
 cv.createTrackbar("U_S", "Track_Detection", 255, 255, nothing)
 cv.createTrackbar("U_V", "Track_Detection", 255, 255, nothing)
 
-image3 = cv.imread('frame.jpg')
+#image1 = cv.imread('lego_1.jpg')
+#image2 = cv.imread('lego_2.jpg')
+#image3 = cv.imread('img4.png')
+image = cv.imread('Gray/gray.png')
 
-image = balance_white(image3)
+#image = balance_white(image3)
 
 kernel = np.ones((5,5),np.uint8)
-
-image1 = cv.GaussianBlur(image, (5, 5), 0)
+image1 = cv.resize(image, (360, 480))
+image1 = cv.resize(image, (560, 480))
 
 while True:
     hsv_image = cv.cvtColor(image1, cv.COLOR_BGR2HSV)
@@ -60,13 +63,6 @@ while True:
 
     # morphological operation
     #mask_r1 = cv.morphologyEx(mask_r1,cv.MORPH_CLOSE, kernel)
-    mask_r1 = cv.morphologyEx(mask_r1, cv.MORPH_OPEN, kernel, iterations=1)
-    mask_r1 = cv.dilate(mask_r1, kernel, iterations=1)
-    mask_r1 = cv.morphologyEx(mask_r1, cv.MORPH_CLOSE, kernel, iterations=3)
-    mask_r1 = cv.erode(mask_r1, kernel, iterations=1)
-    #mask_r1 = cv.morphologyEx(mask_r1, cv.MORPH_OPEN, kernel, iterations=6)
-    #mask_r1 = cv.dilate(mask_r1, kernel, iterations=10)
-    #mask_r1 = cv.erode(mask_r1, kernel, iterations=8)
 
     # Result image1
     result_r1 = cv.bitwise_and(image1, image1, mask=mask_r1)
