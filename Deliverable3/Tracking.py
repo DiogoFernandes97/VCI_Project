@@ -182,13 +182,13 @@ while cap.isOpened():
             cv.rectangle(result, (x, y), (x + w, y + h), (0, 255, 0), 3)
             cv.putText(result, name[color_index], (x - 40, y + 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),
                         2)
-            '''
+            
         # Show
         cv.imshow('Mask', mask)
         cv.imshow('frame2', frame2)
         cv.imshow('Show', result)
         cv.imshow('coise',frame3)
-        '''
+        
         # Press Q on keyboard to  exit
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
